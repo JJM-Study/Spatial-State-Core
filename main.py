@@ -1,9 +1,31 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from rtree import index
+from loguru import logger
 import math
 
+
 app = FastAPI()
+
+# 전역 변수로 인덱스 생성
+idx = index.Index()
+
+
+# 가상의 상점 데이터 1,000개 생성 (테스트용)
+spatial_nodes = {}
+for i in range(1000):
+    # 대구역 기준 반경 약 10km 이내 랜덤 좌표
+    s_lat = 35.87 + (0.1 * math.sin(i))
+    s_lon = 128.59 + (0.1 * math.cos(i))
+    spatial_nodes[i] = {"lat": s_lat, "lon": s_lon}
+
+    # R-tree에 삽입 (반드시 사각형 형태인 (left, bottom, right, top)으로 넣어야 함)
+    # 점(Point)이므로 left=right, bottom=top으로 설정
+    idx.insert(i, (s_lat, s_lon, s_lat, s_lon))
+
+
+
+
 
 
 @app.get("/")
@@ -20,6 +42,11 @@ class Point(BaseModel):
     id: int
     lat: float
     lon: float
+
+class SearchRequest(BaseModel):
+    my_lat : float
+    my_lon : float
+    k: int = 3 # 가장 가까운 몇 개를 찾을 것인가?
 
 class DistanceRequest(BaseModel):
     lat1: float
@@ -41,6 +68,10 @@ def calculate_haversine(lat1, lon1, lat2, lon2):
         math.cos(phi1) * math.cos(phi2) * \
         math.sin(dlambda / 2)**2
 
+    # 부동소수점 오차 방지: a를 0~1 사이로 강제 고정
+    a = max(0, min(1, a))
+
+
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return r * c
 
@@ -58,4 +89,26 @@ async def get_distance(data: DistanceRequest):
         "distance_km": round(distance / 1000, 2)
     }
 
+
+
+@app.post("/nearby")
+async def get_nearby(data: SearchRequest):
+    # 1. R-tree에서 반경 내 혹은 가장 가까운 k개 ID 추출 (매우 빠름)
+    nearest_ids = list(idx.nearest((data.my_lat, data.my_lon), data.k))
+
+    results = []
+    for s_id in nearest_ids:
+        node = spatial_nodes[s_id]
+        logger.info("node")
+        dist = calculate_haversine(data.my_lat, data.my_lon, node["lat"], node["lon"])
+        results.append({
+            "node_id": s_id,
+            "distance_km": round(dist / 1000, 2),
+            "lat": node["lat"],
+            "lon": node["lon"]
+        })
+        logger.info("results:" + results.__str__())
+
+
+    return {"my_location": {"lat": data.my_lat, "lon": data.my_lon}, "nearby_locations": results}
 
