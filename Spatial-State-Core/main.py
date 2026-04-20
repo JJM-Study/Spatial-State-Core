@@ -88,7 +88,7 @@ async def get_distance(data: DistanceRequest):
         "distance_meter": round(distance, 2),
         "distance_km": round(distance / 1000, 2)
     }
-
+aa
 @app.post("/nearby")
 async def get_nearby(data: SearchRequest):
     # 1. R-tree에서 반경 내 혹은 가장 가까운 k개 ID 추출 (매우 빠름)
