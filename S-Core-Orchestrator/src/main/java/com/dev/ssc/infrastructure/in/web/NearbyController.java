@@ -1,30 +1,28 @@
 package com.dev.ssc.infrastructure.in.web;
 
-import com.dev.ssc.core.service.SpatialEngineService;
+import com.dev.ssc.application.port.out.SpatialEnginePort;
+import com.dev.ssc.core.dto.SpatialResult;
 import com.dev.ssc.infrastructure.out.fastapi.dto.NearbyResponse;
-import com.dev.ssc.infrastructure.out.fastapi.dto.SearchRequest;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-
 @RestController
+// /api/v1/spatial 이냐, /api/spatial/v1 이냐 ..
+@RequestMapping("/api/v1/spatial")
 public class NearbyController {
-    private final SpatialEngineService spatialEngineService;
+    private final SpatialEnginePort spatialEnginePort;
 
-    NearbyController(SpatialEngineService spatialEngineService) {
-        this.spatialEngineService = spatialEngineService;
+    NearbyController(SpatialEnginePort spatialEnginePort) {
+        this.spatialEnginePort = spatialEnginePort;
     }
 
-   @PostMapping()
-   public Mono<NearbyResponse> findNearby(@RequestBody SearchRequest request) {
 
-        spatialEngineService.findNearby(request);
+    // 굳이 NearbyResponse를, 개별 infrastructure에 dto로 정의할 필요가 있을까?
+    // 어차피 core의 dto에 종속될텐데..
+    // -> 그렇다면 JsonProperty 의 문제는?
+   @PostMapping("/nearby")
+   public Mono<SpatialResult> findNearby(Double lat, Double lon, Integer k) {
 
-       return
+       return spatialEnginePort.callExternalEngine(lat, lon, k);
    }
 }
