@@ -22,7 +22,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 
-@Service
+//@Service // 서비스와 Mono를 사용하지 않고 구현할 방법이 있을까..?
 @RequiredArgsConstructor
 public class SpatialEngineService implements SpatialEngineUseCase {
 

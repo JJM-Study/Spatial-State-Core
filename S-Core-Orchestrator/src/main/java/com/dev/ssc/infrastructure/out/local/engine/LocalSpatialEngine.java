@@ -23,16 +23,20 @@ import reactor.core.publisher.Mono;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
+//import java.util.concurrent.atomic.AtomicReference;
 
 @Component
 public class LocalSpatialEngine {
+
+//    private final AtomicReference<> atomicReference = new AtomicReference(); // 현재 자체는 동시성이 일어날 위험성은 없다고 봐도.
 
     private static final Logger logger = LogManager.getLogger(LocalSpatialEngine.class);
 
     public record NodeData(int nodeId, double lat, double lon) {}
 
-    RTree<Integer, Point> localRtree = RTree.star().create();
+    final RTree<Integer, Point> localRtree = RTree.star().create();
 
     private final Map<Integer, NodeData> nodeStorage = new ConcurrentHashMap<>();
 
@@ -59,7 +63,7 @@ public class LocalSpatialEngine {
             nodeStorage.put(i, new NodeData(i, randomLat, randomLon));
 
 
-            localRtree = localRtree.add(i, Geometries.point(randomLat, randomLon));
+            localRtree.add(i, Geometries.point(randomLat, randomLon));
         }
         logger.info("Rtree 임의 10km 내 장소 1000군데 할당 완료.");
     }
