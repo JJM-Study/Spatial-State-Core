@@ -5,6 +5,7 @@ from loguru import logger
 import math
 import uvicorn
 import random
+import csv
 
 
 # 전역 변수로 인덱스 생성
@@ -60,6 +61,18 @@ class DistanceRequest(BaseModel):
     lat2: float
     lon2: float
 
+
+# 2026/08/18 추가
+class StoreNode(BaseModel):
+    store_id : str # 상가업소번호
+    name : str # 상호명
+    category_large : str #상권업종대분류명
+    category_mid : str # 상권업종중분류명
+    address : str # 도로명주소
+    lon : float # 경도
+    lat : float # 위도
+
+
 def calculate_haversine(lat1, lon1, lat2, lon2):
     # 지구 반지름 (미터 단위)
     r = 6371000
@@ -114,6 +127,35 @@ async def get_nearby(data: SearchRequest):
 
     logger.info("results:" + results.__str__())
     return {"my_location": {"lat": data.my_lat, "lon": data.my_lon}, "nearby_locations": results}
+
+
+# 2026/08/15 추가
+def load_spatial_index(csv_path: str) -> tuple[index.INDEX, dict[int, StoreNode]]:
+    idx = index.Index()
+    nodes: dict[int, StoreNode] = {}
+    with open(csv_path, encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for i, row in enumerate(reader):
+            lat = float(row["위도"])
+            lon = float(row["경도"])
+            node = StoreNode(
+                store_id = row["상가업소번호"],
+                name = row["상호명"],
+                category_large = row["상권업종대분류명"],
+                category_mid = row["상권업종중분류명"],
+                address = row["도로명주소"],
+                lon=lon,
+                lat=lat,
+            )
+            nodes[i] = node
+            idx.insert(i, (lat, lon, lat, lon))
+    return idx, nodes
+
+    
+
+
+
+
 
 
 if __name__ == "__main__":
