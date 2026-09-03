@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -58,11 +60,12 @@ public class CsvNodeLoader {
 
 
     //public List<Map<String, String>> read(Path csvPath) {
-    public List<Map<String, String>> read(Path csvPath) {
+    public List<Map<String, String>> read(InputStream csvPath) {
 
         // CsvNodeLoader 구현 방법 참고
-        try (
-            BufferedReader reader = Files.newBufferedReader(csvPath, StandardCharsets.UTF_8)) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(csvPath, StandardCharsets.UTF_8)
+            ))
+            {
             List<String> lines = reader.lines().toList();
 
             List<String> headers = Arrays.stream(lines.getFirst().split(",", -1))

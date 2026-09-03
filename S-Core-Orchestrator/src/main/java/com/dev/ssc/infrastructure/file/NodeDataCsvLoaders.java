@@ -6,9 +6,13 @@ import org.apache.logging.log4j.jul.CoreLogger;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -32,17 +36,28 @@ public class NodeDataCsvLoaders {
     // forSpatialNodes의 타입이 CsvNodeLoader를 바라보니까,static과 인스턴스 생성 공존 시 길이 엇나갈 수 밖에.
 //    public static CsvNodeLoader<NodeData> forSpatialNodes(Path csvpath) {
     @Bean
-    public List<NodeData> forSpatialNodes(Path csvpath) {
+    public List<NodeData> forSpatialNodes() {
 
-    List<Map<String, String>> rows = csvNodeLoader.read(csvpath);
 
-    // 경도, 위도 분류 후 각각에 대해서 stream
-    return rows.stream()
-            .collect(Collectors.groupingBy(NodeDataCsvLoaders::toCoordinate))
-            .entrySet()
-            .stream()
-            .map(NodeDataCsvLoaders::toNodeData)
-            .toList();
+        List<Map<String, String>> rows;
+
+        String csvPath = "/data/seoul-jung-gu.csv";
+
+        try(InputStream is = getClass().getResourceAsStream(csvPath)) {
+
+            rows = csvNodeLoader.read(is);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // 경도, 위도 분류 후 각각에 대해서 stream
+        return rows.stream()
+                .collect(Collectors.groupingBy(NodeDataCsvLoaders::toCoordinate))
+                .entrySet()
+                .stream()
+                .map(NodeDataCsvLoaders::toNodeData)
+                .toList();
 
     }
 
