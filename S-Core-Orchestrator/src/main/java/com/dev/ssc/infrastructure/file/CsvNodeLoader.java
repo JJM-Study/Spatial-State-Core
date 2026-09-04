@@ -3,6 +3,7 @@ package com.dev.ssc.infrastructure.file;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,7 +16,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-
+@Component
 public class CsvNodeLoader {
 
 //    private final Function<List<CsvRow>, List<T>> converter;
@@ -26,6 +27,10 @@ public class CsvNodeLoader {
     // reach(CsvRow) ￢∩ V_config = ∅
     // 수학적으로는 이런 느낌으로 가도록.
     private final Logger logger = LogManager.getLogger();
+
+    public CsvNodeLoader() {
+
+    }
 
 //    private CsvNodeLoader(Function<List<CsvRow>, List<T>> converter) {
 //        this.converter = converter;
